@@ -2,6 +2,10 @@
 Settings, customisation and tweaks.
 '''
 import os
+import yaml
+
+with open(os.path.expanduser('~/.cache/wal/colors.yml'), 'r') as stream:
+    WAL_COLS = yaml.safe_load(stream)
 
 
 # Colour codes from gruvbox for use in the UI.
@@ -65,15 +69,17 @@ DIRECTIONS = ("Left", "Down", "Up", "Right")
 # TERMINAL = "urxvt"
 # TERMINAL = "mate-terminal"
 # TERMINAL = "tilix"
-TERMINAL = "st"
+TERMINAL = "termite"
 
 # UI Config vars
 # FONT = 'Hack Regular'
 # FONT = 'ProFont for Powerline Regular'
-FONT = 'TerminessTTF Nerd Font Medium'
-FOREGROUND = COLS['light_3']
+# FONT = 'TerminessTTF Nerd Font Medium'
+# FONT = 'xos4 Terminess Powerline Bold'
+FONT = 'Terminus Bold'
+FOREGROUND = WAL_COLS['special']['foreground']
 ALERT = COLS['red_1']
-FONTSIZE = 15
+FONTSIZE = 20
 PADDING = 3
 
 # Keep all of the UI consistent
@@ -84,7 +90,7 @@ FONT_PARAMS = {
 }
 
 # Location of my script files (must have a trailing slash!)
-SCRIPT_DIR = os.path.expanduser('~/bin/scripts/')
+SCRIPT_DIR = os.path.expanduser('~/.config/qtile/scripts/')
 ACME_SCRIPT_DIR = os.path.expanduser('~/Personal/acme-corp/scripts/')
 
 # Whether or not the primary monitor should spawn a systray

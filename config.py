@@ -4,15 +4,24 @@ My config files for qtile
 
 There are probably some more good hooks to make use of in here:
     http://qtile.readthedocs.io/en/latest/manual/ref/hooks.html
+
+TODO: [ ] add mouse dragging of tiled windows
+TODO: [ ] add hot corners
+TODO: [ ] add mouse wrapping
+TODO: [ ] fix mouse capture when switching groups
+TODO: [ ]
+
+
 """
 import os
+import subprocess
 
 # qtile internals
 from libqtile import bar, widget
 from libqtile.config import Screen, hook
 
 # Settings/helpers
-from settings import COLS, FONT_PARAMS, WITH_SYS_TRAY
+from settings import WAL_COLS, COLS, FONT_PARAMS, WITH_SYS_TRAY
 from helpers import run_script
 
 # Import the parts of my config defined in other files
@@ -54,7 +63,8 @@ def remove_scratchpad_on_group_change():
     If we were showing windows from the scratchpad when we move to a new
     group, we hide them again automatically.
     """
-    previous_group = hook.qtile.currentScreen.previous_group
+
+    previous_group = hook.qtile.current_screen.previous_group
     if not previous_group:
         # No windows to hide
         return
@@ -79,55 +89,69 @@ def make_screen(systray=False):
     """Defined as a function so that I can duplicate this on other monitors"""
     def _separator():
         # return widget.Sep(linewidth=2, foreground=COLS["dark_3"])
-        return widget.Sep(linewidth=2, foreground=COLS["deus_1"])
+        return widget.Sep(linewidth=2, foreground=WAL_COLS['special']['foreground'])
 
     blocks = [
         # Marker for the start of the groups to give a nice bg: ◢■■■■■■■◤
         widget.TextBox(
-            font="Arial", foreground=COLS["dark_4"],
-            # font="Arial", foreground=COLS["deus_3"],
-            text="◢", fontsize=50, padding=-1
+            font="Arial", foreground=WAL_COLS['special']['foreground'],
+            text="◢", fontsize=66, padding=-20
         ),
         widget.GroupBox(
-            other_current_screen_border=COLS["orange_0"],
-            this_current_screen_border=COLS["blue_0"],
+            other_current_screen_border=WAL_COLS['colors']['color5'],
+            this_current_screen_border=WAL_COLS['colors']['color4'],#COLS["blue_0"],
             # this_current_screen_border=COLS["deus_2"],
-            other_screen_border=COLS["orange_0"],
-            this_screen_border=COLS["blue_0"],
+            other_screen_border=WAL_COLS['colors']['color5'],#COLS["orange_0"],
+            this_screen_border=WAL_COLS['colors']['color4'],#COLS["blue_0"],
             # this_screen_border=COLS["deus_2"],
-            highlight_color=COLS["blue_0"],
+            highlight_color=WAL_COLS['colors']['color4'],#COLS["blue_0"],
             # highlight_color=COLS["deus_2"],
-            urgent_border=COLS["red_1"],
-            background=COLS["dark_4"],
+            urgent_border=WAL_COLS['colors']['color3'],#COLS["red_1"],
+            background=WAL_COLS['special']['foreground'],#COLS["dark_4"],
             # background=COLS["deus_3"],
             highlight_method="line",
-            inactive=COLS["dark_2"],
-            active=COLS["light_2"],
+            inactive=WAL_COLS['colors']['color2'],#,COLS["dark_2"],
+            active=WAL_COLS['colors']['color1'],#COLS["light_2"],
             disable_drag=True,
             borderwidth=2,
-            **FONT_PARAMS,
+            font=FONT_PARAMS['font'],
+            fontsize=FONT_PARAMS['fontsize']+10,
+            foreground=FONT_PARAMS['foreground']
         ),
         # Marker for the end of the groups to give a nice bg: ◢■■■■■■■◤
         widget.TextBox(
-            font="Arial", foreground=COLS["dark_4"],
+            font="Arial", foreground=WAL_COLS['special']['foreground'],
             # font="Arial", foreground=COLS["deus_3"],
-            text="◤ ", fontsize=50, padding=-5
+            text="◤ ", fontsize=66, padding=-20
         ),
         # Show the title for the focused window
         widget.WindowName(**FONT_PARAMS),
         # Allow for quick command execution
         widget.Prompt(
-            cursor_color=COLS["light_3"],
+            cursor_color=WAL_COLS['special']['cursor'],
             # ignore_dups_history=True,
             bell_style="visual",
             prompt="λ : ",
             **FONT_PARAMS
         ),
+        widget.Mpris2(
+            name='spotify',
+            objname="org.mpris.MediaPlayer2.spotify",
+            display_metadata=['xesam:title', 'xesam:artist'],
+            scroll_chars=None,
+            stop_pause_text='',
+            **FONT_PARAMS
+        ),
         _separator(),
         # Resource usage graphs
+
+        widget.Wallpaper(directory=os.path.expanduser('~/.config/qtile/wallpaper/'),
+                         label=' ',
+                         wallpaper_command=['wal', '-i'],
+                         **FONT_PARAMS),
         widget.CPUGraph(
-            border_color=COLS["yellow_1"],
-            graph_color=COLS["yellow_1"],
+            border_color=WAL_COLS['colors']['color1'],
+            graph_color=WAL_COLS['colors']['color1'],
             border_width=1,
             line_width=1,
             type="line",
@@ -135,8 +159,8 @@ def make_screen(systray=False):
             **FONT_PARAMS
         ),
         widget.MemoryGraph(
-            border_color=COLS["blue_2"],
-            graph_color=COLS["blue_2"],
+            border_color=WAL_COLS['colors']['color2'],
+            graph_color=WAL_COLS['colors']['color2'],
             border_width=1,
             line_width=1,
             type="line",
@@ -144,8 +168,8 @@ def make_screen(systray=False):
             **FONT_PARAMS
         ),
         widget.NetGraph(
-            border_color=COLS["green_1"],
-            graph_color=COLS["green_1"],
+            border_color=WAL_COLS['colors']['color3'],
+            graph_color=WAL_COLS['colors']['color3'],
             border_width=1,
             line_width=1,
             type="line",
@@ -153,65 +177,99 @@ def make_screen(systray=False):
             **FONT_PARAMS
         ),
         # IP information
-        ShellScript(
-            fname="ipadr.sh",
-            update_interval=10,
-            markup=True,
-            padding=1,
-            **FONT_PARAMS
-        ),
-        # Available apt upgrades
-        ShellScript(
-            fname="aptupgrades.sh",
-            update_interval=600,
-            markup=True,
-            padding=1,
-            **FONT_PARAMS
-        ),
+        # ShellScript(
+        #     fname="ipadr.sh",
+        #     update_interval=10,
+        #     markup=True,
+        #     padding=1,
+        #     **FONT_PARAMS
+        # ),
+        # # Available apt upgrades
+        # ShellScript(
+        #     fname="aptupgrades.sh",
+        #     update_interval=600,
+        #     markup=True,
+        #     padding=1,
+        #     **FONT_PARAMS
+        # ),
         # Current battery level
-        ShellScript(
-            fname="battery.sh",
-            update_interval=60,
-            markup=True,
-            padding=1,
+        widget.TextBox("", **FONT_PARAMS),
+        widget.CheckUpdates(
+            distro="Arch_checkupdates",
+            display_format="{updates}",
+            colour_no_updates=WAL_COLS['special']['foreground'],
+            colour_have_updates=WAL_COLS['colors']['color4'],
             **FONT_PARAMS
         ),
         # Wifi strength
-        ShellScript(
-            fname="wifi-signal.sh",
-            update_interval=60,
-            markup=True,
-            padding=1,
-            **FONT_PARAMS
-        ),
+        # ShellScript(
+        #     fname="wifi-signal.sh",
+        #     update_interval=60,
+        #     markup=True,
+        #     padding=1,
+        #     **FONT_PARAMS
+        # ),
         # Volume % : scroll mouse wheel to change volume
-        widget.TextBox("", **FONT_PARAMS),
+        widget.TextBox("蓼", **FONT_PARAMS),
         widget.Volume(**FONT_PARAMS),
+        widget.TextBox("", **FONT_PARAMS),
+        widget.Backlight(format="{percent:2.0%}",
+                         backlight_name="intel_backlight",
+                         brightness_file='/sys/class/backlight/intel_backlight/brightness',
+                         max_brightness_file="/sys/class/backlight/intel_backlight/max_brightness",
+                         change_command="brightnessctl -set {0}%",
+                         **FONT_PARAMS),
+        widget.TextBox("直", **FONT_PARAMS),
+        widget.Wlan(interface='wlp2s0',
+                    format="{percent:2.0%}",
+                    **FONT_PARAMS),
+        # widget.TextBox("", **FONT_PARAMS),
+        widget.Battery(charge_char="",
+                       full_char="",
+                       empty_char="",
+                       unkown_char="",
+                       discharge_char="",
+                       format="{char}",
+                       show_short_text=False,
+                       **FONT_PARAMS),
+        widget.Battery(charge_char="",
+                       full_char="",
+                       empty_char="",
+                       unkown_char="",
+                       discharge_char="",
+                       format="{percent:2.0%}",
+                       show_short_text=False,
+                       **FONT_PARAMS),
         _separator(),
         # Current time
         widget.Clock(
-            format="%Y-%m-%d %a %I:%M %p",
+            format="%m/%d/%Y %I:%M %p %a",
             **FONT_PARAMS
         ),
-        # Keyboard layout
-        widget.KeyboardLayout(
-            configured_keyboards=['us', 'gb'],
-            **FONT_PARAMS
-        ),
+        # # Keyboard layout
+        # widget.KeyboardLayout(
+        #     configured_keyboards=['us', 'gb'],
+        #     **FONT_PARAMS
+        # ),
         # Visual indicator of the current layout for this workspace.
         widget.CurrentLayoutIcon(
             custom_icon_paths=[os.path.expanduser("~/.config/qtile/icons")],
             **FONT_PARAMS
         ),
     ]
-
+# Section "Device"
+# Identifier  "0x72"
+# Driver      "intel"
+# Option      "Backlight"  "intel_backlight"
+# EndSection
+    # 1e2
     if systray:
         # Add in the systray and additional separator
         blocks.insert(-1, widget.Systray())
         blocks.insert(-1, _separator())
 
     # return Screen(top=bar.Bar(blocks, 25, background=COLS["deus_1"]))
-    return Screen(top=bar.Bar(blocks, 25, background=COLS["dark_2"]))
+    return Screen(top=bar.Bar(blocks, 25, background=WAL_COLS['special']['background'], opacity=.8))
 
 
 # XXX : When I run qtile inside of mate, I don"t actually want a qtile systray
@@ -224,10 +282,10 @@ screens = [make_screen(systray=WITH_SYS_TRAY)]
 focus_on_window_activation = "smart"
 dgroups_key_binder = None
 follow_mouse_focus = True
-bring_front_click = False
+bring_front_click = True
 auto_fullscreen = True
 dgroups_app_rules = []
-cursor_warp = True
+cursor_warp = False
 # main = None
 
 # XXX :: Horrible hack needed to make grumpy java apps work correctly.

@@ -11,10 +11,12 @@ is_running() {
 }
 
 # Set screen resolutions (add additional screens here)
-xrandr --output eDP1 --mode 1920x1080 &
+#xrandr --output eDP1 --mode 1920x1080 &
+#xrandr --setprovideroutputsource modesetting NVIDIA-0
+#xrandr --auto
 
 # Set the background image
-feh --bg-fill /home/innes/Pictures/Wallpapers/river-boat.jpg &
+#feh --bg-fill /home/innes/Pictures/Wallpapers/river-boat.jpg &
 # feh --bg-fill /home/innes/Pictures/Wallpapers/dunstanburgh.jpg &
 # feh --bg-fill /home/innes/Pictures/Wallpapers/turtle.jpg &
 # feh --bg-fill /home/innes/Pictures/Wallpapers/cookies.jpg &
@@ -25,20 +27,20 @@ feh --bg-fill /home/innes/Pictures/Wallpapers/river-boat.jpg &
 sleep 1
 
 # Bring in mate utils for managing the session
-[[ $(is_running 'mate-settings-daemon') ]] || mate-settings-daemon &
-[[ $(is_running 'mintupdate-launcher') ]] || mintupdate-launcher &
-[[ $(is_running 'mate-power-manager') ]] || mate-power-manager &
+#[[ $(is_running 'mate-settings-daemon') ]] || mate-settings-daemon &
+#[[ $(is_running 'mintupdate-launcher') ]] || mintupdate-launcher &
+#[[ $(is_running 'mate-power-manager') ]] || mate-power-manager &
 
 # Compton visual compositing but not for qtile as it messes things up
-if ! [[ $RUNNING_QTILE ]]; then
-  [[ $(is_running 'compton') ]] || compton -CG &
-fi;
+[[ $(is_running 'picom') ]] || picom -CG &
+#if ! [[ $RUNNING_QTILE ]]; then
+#fi;
 
 # Network manager
-[[ $(is_running 'nm-applet') ]] || nm-applet &
+#[[ $(is_running 'nm-applet') ]] || nm-applet &
 
 # Auto-mount external drives
-[[ $(is_running 'udiskie') ]] || udiskie -a -n -t &
+#[[ $(is_running 'udiskie') ]] || udiskie -a -n -t &
 
 # Start the keyring daemon for managing ssh keys
 [[ $(is_running 'gnome-keyring-daemon') ]] || gnome-keyring-daemon -s &
@@ -49,10 +51,10 @@ fi;
 
 # Notification daemon : first kill the default mate daemon if it has spun up
 # [[ $(is_running 'mate-notification-daemon') ]] || killall mate-notification-daemon 
-[[ $(is_running 'dunst') ]] || dunst &
+#[[ $(is_running 'dunst') ]] || dunst &
 
 # Music server
-[[ $(is_running 'mopidy') ]] || python2 -m mopidy &
+#[[ $(is_running 'mopidy') ]] || python2 -m mopidy &
 
 # polybar for i3
 # [[ $(is_running 'polybar') ]] || polybar top

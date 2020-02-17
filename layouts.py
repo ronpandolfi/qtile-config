@@ -11,7 +11,7 @@ Look at porting some Xmonad layouts to qtile:
 >>  Try cribbing from what the XmonadTall layout does:
         http://qtile.readthedocs.io/en/latest/_modules/libqtile/layout/xmonad.html#MonadTall
 '''
-from settings import COLS, FONT_PARAMS
+from settings import WAL_COLS, FONT_PARAMS
 from libqtile import layout
 
 
@@ -19,9 +19,9 @@ from libqtile import layout
 # can be passed as a dict splat. There _are_ some common ones for multiple
 # layouts, so they are defined here and used where possible to give a
 # consistent UI.
-BORDER_NORMAL = COLS["dark_2"]
+BORDER_NORMAL = WAL_COLS["colors"]['color1']
 # BORDER_FOCUS = COLS["blue_2"]
-BORDER_FOCUS = COLS["red_1"]
+BORDER_FOCUS = WAL_COLS["colors"]['color3']
 BORDER_WIDTH = 3
 MARGIN = 10
 
@@ -57,9 +57,9 @@ layouts = [
     # XXX : Good for browser style flipping between windows when working on
     #       large coding projects (beats constant buffer/tab swaps in Vim!)
     layout.TreeTab(
-        inactive_fg=COLS["light_0"],
-        inactive_bg=BORDER_NORMAL,
-        active_bg=COLS["light_3"],
+        inactive_fg=BORDER_NORMAL,
+        inactive_bg=WAL_COLS['colors']["color0"],
+        active_bg=WAL_COLS["colors"]['color4'],
         active_fg=BORDER_NORMAL,
         sections=["    .: Windows :."],
         # Want a consistant font w. the terminal here
@@ -67,10 +67,10 @@ layouts = [
         fontsize=FONT_PARAMS["fontsize"],
         font="ProFontWindows Nerd Font Mono Book",
     ),
-    # XXX : Emulate Wmii tiling: each new window adds to the focused
+    # XXX : Columns tiling: each new window adds to the focused
     #       column. Moving a window "out" of the current colmun creates
     #       a new column.
-    layout.Wmii(
+    layout.Columns(
         border_normal=BORDER_NORMAL,
         border_focus=BORDER_FOCUS,
         border_width=BORDER_WIDTH,

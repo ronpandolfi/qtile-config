@@ -23,7 +23,7 @@ may be something to do with my own ez_keys function...!)
 '''
 import os
 
-from libqtile.config import Click, Drag, EzKey
+from libqtile.config import Click, Drag, EzKey, Key
 from libqtile.command import lazy
 
 from settings import MOD, TERMINAL, ACME_SCRIPT_DIR
@@ -33,6 +33,7 @@ from groups import groups
 
 def switch_screens(target_screen):
     '''Send the current group to the other screen.'''
+
     @lazy.function
     def _inner(qtile):
         current_group = qtile.screens[1 - target_screen].group
@@ -46,6 +47,7 @@ def focus_or_switch(group_name):
     Focus the selected group on the current screen or switch to the other
     screen if the group is currently active there
     '''
+
     @lazy.function
     def _inner(qtile):
         # Check what groups are currently active
@@ -86,7 +88,7 @@ def to_scratchpad(window):
         y=int(screen.height / 10),
         w=int(screen.width / 1.2),
         h=int(screen.height / 1.2),
-        )
+    )
 
 
 def show_scratchpad(qtile):
@@ -167,7 +169,7 @@ keys = [EzKey(k[0], *k[1:]) for k in [
     ("M-A-<Right>", lazy.layout.flip_right()),
 
     # .: Program Launchers :. #
-    ("M-<Return>", lazy.spawn(TERMINAL + " -e zsh")),
+    ("M-<Return>", lazy.spawn(TERMINAL)),
     ("M-<semicolon>", lazy.spawn('rofi-apps')),
     ("M-d", lazy.spawn(
         "dmenu_run -b -p 'λ' -sb '#83a598' -nb '#504945' -nf '#ebdbb2'")),
@@ -204,17 +206,19 @@ keys = [EzKey(k[0], *k[1:]) for k in [
     # Toggle between the two most recently used groups
     # TODO :: Write my own version of this that has the same
     #         screen preserving behaviour
-    ("M-<Tab>", lazy.screen.toggle_group()),
+    ("M-<Tab>", lazy.screen.next_group()),
+    ("M-S-<Tab>", lazy.screen.prev_group()),
     # Close the current window: NO WARNING!
-    ("M-S-q", lazy.window.kill()),
-    ("M-S-<BackSpace>", lazy.window.kill()),
+    ("A-<F4>", lazy.window.kill()),
+    ("A-<Tab>", lazy.layout.next()),
+    ("A-S-<Tab>", lazy.layout.prev()),
 
     # .: Sys + Utils :. #
     # Restart qtile in place and pull in config changes (check config before
     # doing this with `check-qtile-conf` script to avoid crashes)
-    ("M-A-r", lazy.restart()),
+    ("M-<F5>", lazy.restart()),
     # Shut down qtile.
-    ("M-A-<Escape>", lazy.shutdown()),
+    ("M-<Escape>", lazy.shutdown()),
     ("M-A-l", lazy.spawn("lock-screen")),
     ("M-A-s", lazy.spawn("screenshot")),
     ("M-A-<Delete>", lazy.spawn(script("power-menu.sh"))),
@@ -225,24 +229,44 @@ keys = [EzKey(k[0], *k[1:]) for k in [
         ACME_SCRIPT_DIR, "acme-fuzzy-window-search.sh"))),
 ]]
 
+keys.extend([# Brightness
+             Key([], "XF86MonBrightnessUp", lazy.spawn("brightnessctl set +2%")),
+             Key([], "XF86MonBrightnessDown", lazy.spawn("brightnessctl set 2%-")),
+
+             # Multimedia
+             Key([], "XF86AudioNext", lazy.spawn("mpc next")),
+             Key([], "XF86AudioPrev", lazy.spawn("mpc prev")),
+             Key([], "XF86AudioPlay", lazy.spawn("mpc toggle")),
+             Key([], "XF86AudioStop", lazy.spawn("mpc stop")),
+
+             # general volume
+             Key([], "XF86AudioRaiseVolume", lazy.spawn("amixer -c 0 -q set Master 2dB+")),
+             Key([], "XF86AudioLowerVolume", lazy.spawn("amixer -c 0 -q set Master 2dB-")),
+             Key([], "XF86AudioMute", lazy.spawn("amixer -D pulse -q set Master 1+ toggle")),
+
+             # music volume
+             Key(["mod4"], "XF86AudioRaiseVolume", lazy.spawn("mpc volume +5")),
+             Key(["mod4"], "XF86AudioLowerVolume", lazy.spawn("mpc volume -5")),
+             ])
+
 # .: Jump between groups and also throw windows to groups :. #
-for _ix, group in enumerate(groups[:10]):
+for _ix, group in enumerate(groups[:len(groups) - 1]):
     # Index from 1-0 instead of 0-9
     ix = 0 if _ix == 9 else _ix + 1
 
     keys.extend([EzKey(k[0], *k[1:]) for k in [
         # M-ix = switch to that group
-        # ("M-%d" % ix, lazy.group[group.name].toscreen()),
-        ("M-%d" % ix, focus_or_switch(group.name)),
+        ("M-%d" % ix, lazy.group[group.name].toscreen()),
+        # ("M-%d" % ix, focus_or_switch(group.name)),
         # M-S-ix = switch to & move focused window to that group
         ("M-S-%d" % ix, lazy.window.togroup(group.name)),
     ]])
 
 # .: Use the mouse to drag floating layouts :. #
 mouse = [
-    Drag([MOD], "Button1", lazy.window.set_position_floating(),
+    Drag([MOD], "Button1", lazy.window.set_position(),
          start=lazy.window.get_position()),
     Drag([MOD], "Button3", lazy.window.set_size_floating(),
          start=lazy.window.get_size()),
-    Click([MOD], "Button2", lazy.window.bring_to_front())
+    Click([MOD], "Button2", lazy.window.toggle_floating())
 ]
