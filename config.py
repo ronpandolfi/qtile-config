@@ -241,6 +241,7 @@ def make_screen(systray=False):
                          **FONT_PARAMS),
         widget.TextBox("直", **FONT_PARAMS),
         widget.Wlan(interface='wlp2s0',
+                    update_interval='10',
                     format="{percent:2.0%}",
                     **FONT_PARAMS),
         # widget.TextBox("", **FONT_PARAMS),
