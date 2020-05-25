@@ -27,8 +27,8 @@ from libqtile.config import Group, ScratchPad, DropDown
 # >>> See https://fontawesome.com/cheatsheet for more fontawesome icons
 groups = [
     Group("", spawn='termite && termite'),
-    Group("", spawn='pycharm'),
     Group("", spawn='firefox'),
+    Group("", spawn='pycharm nosplash'),
     Group("", spawn='slack'),
     # Group("5 "),
     # Group("6 "),
